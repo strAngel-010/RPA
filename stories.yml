@@ -1,0 +1,22 @@
+version: "3.1"
+stories:
+- story: tariff credit
+  steps:
+  - intent: tariff_credit
+  - action: action_proglang
+- story: tariff debit
+  steps:
+  - intent: tariff_debit
+  - action: action_proglang
+- story: tariff debit work
+  steps:
+  - intent: tariff_debit_work
+  - action: action_proglang
+- story: cur
+  steps:
+  - intent: currencies
+  - action: action_proglang
+- story: val
+  steps:
+  - intent: values
+  - action: action_proglang

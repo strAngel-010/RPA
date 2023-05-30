@@ -1,0 +1,8 @@
+{"label":"PROGLANG","pattern":[{"LOWER":"golang"}]}
+{"label":"PROGLANG","pattern":[{"LOWER":"go", "POS": {"NOT_IN": "VERB"}}]}
+{"label":"PROGLANG","pattern":[{"LOWER":"sql"}]}
+{"label":"PROGLANG","pattern":[{"LOWER":"python"}]}
+{"label":"PROGLANG","pattern":[{"LOWER":{"REGEX":"(python\\d+\\.?\\d*.?\\d*)"}}]}
+{"label":"PROGLANG","pattern":[{"LOWER":"python"}, {"TEXT":{"REGEX":"(\\d+\\.?\\d*.?\\d*)"}}]}
+{"label":"PROGLANG","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}]}
+{"label":"PROGLANG","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}, {"TEXT": {"REGEX": "(\\d+\\.?\\d*.?\\d*)"}}]}

@@ -1,0 +1,67 @@
+version: "3.1"
+actions:
+- action_proglang
+- utter_goodbye
+- utter_greet
+entities:
+- CARD_TYPE
+- CARD_CATEGORY
+- VALUE
+- CURRENCY
+intents:
+- select_tariff
+- tariff_credit
+- tariff_debit
+- tariff_debit_work
+slots:
+  card_category:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  card_type:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  tariff:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  card:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  currency:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  value:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  first_message:
+    type: text
+    influence_conversation: false
+    initial_value: "0"
+    mappings:
+    - type: custom
+
+  current_state:
+    type: text
+    influence_conversation: false
+    initial_value: "0"
+    mappings:
+    - type: custom
+responses:
+  utter_goodbye:
+  - text: Пока
+  utter_greet:
+  - text: Добрый день! Я Вам помогу подобрать карту согласно тарифу. Пожалуйста, скажите мне какую карту вы хотите и с какой платой за обслуживание?
+session_config:
+  carry_over_slots_to_new_session: true
+  session_expiration_time: 60

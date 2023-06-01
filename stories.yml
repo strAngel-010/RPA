@@ -1,22 +1,18 @@
 version: "3.1"
 stories:
-- story: tariff credit
+- story: select card
   steps:
-  - intent: tariff_credit
-  - action: action_proglang
-- story: tariff debit
+    - intent: select_card
+    - action: action_proglang
+- story: selet limit
   steps:
-  - intent: tariff_debit
-  - action: action_proglang
-- story: tariff debit work
+    - intent: select_limit
+    - action: action_proglang
+- story: select place
   steps:
-  - intent: tariff_debit_work
-  - action: action_proglang
-- story: cur
+    - intent: select_place
+    - action: action_proglang
+- story: select service
   steps:
-  - intent: currencies
-  - action: action_proglang
-- story: val
-  steps:
-  - intent: values
-  - action: action_proglang
+    - intent: select_service
+    - action: action_proglang

@@ -6,12 +6,11 @@ pipeline:
 - name: HFTransformersNLP
   model_weights: "DeepPavlov/rubert-base-cased"
   model_name: "bert"
-
 - name: SpacyNLP
   model: "card_type"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
-  dimensions: ["CARD_TYPE","CARD_CATEGORY","VALUE","CURRENCY"]
+  dimensions: ["CARD_TYPE","CARD_CATEGORY","VALUE","CURRENCY","LIMIT_TYPE", "PLACE_TYPE", "SERVICE_TYPE"]
 - name: SpacyFeaturizer
   pooling: mean
 - name: CountVectorsFeaturizer
@@ -34,7 +33,7 @@ pipeline:
   epochs: 1
 
 policies:
-- name: EmbeddingPolicy
+- name: TEDPolicy
   max_history: 10
   epochs: 20
   batch_size:
@@ -42,8 +41,8 @@ policies:
   - 64
 - max_history: 6
   name: AugmentedMemoizationPolicy
-- core_threshold: 0.3
+- core_threshold: 0.01
   name: TwoStageFallbackPolicy
-  nlu_threshold: 0.8
+  nlu_threshold: 0.01
 - name: FormPolicy
 - name: MappingPolicy

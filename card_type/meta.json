@@ -933,9 +933,11 @@
       "PER"
     ],
     "entity_ruler":[
-      "CARD_CATEGORY",
       "CARD_TYPE",
       "CURRENCY",
+      "LIMIT_TYPE",
+      "PLACE_TYPE",
+      "SERVICE_TYPE",
       "VALUE"
     ]
   },

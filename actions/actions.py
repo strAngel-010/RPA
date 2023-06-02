@@ -36,10 +36,14 @@ class ActionProglang(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-        if tracker.get_slot("first_message") == "0":
-            dispatcher.utter_message(self.state_limits.resolve())
-
-        slot_list = ['service_type', 'place_type', 'card_type', 'limit_type']
+        slot_list = ['service_type', 'place_type', 'card_type', 'limit_type', 'first_message', 'current_state']
         lst_setter = [i for i in self.__set_slots(tracker.latest_message['entities']) if i[0] in slot_list]
-        self.state_limits.resolve(lst_setter)
+        needs_reload, ans = self.state_limits.resolve(lst_setter)
+        if self.state_limits.edited_slots:
+            dispatcher.utter_message("Отлично!")
+        dispatcher.utter_message(ans)
+        print(tracker.latest_message['text'])
+        print(lst_setter)
+        if needs_reload:
+            return [SlotSet(i[0], None) for i in lst_setter]
         return [SlotSet(i[0], i[1]) for i in lst_setter]

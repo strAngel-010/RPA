@@ -26,6 +26,14 @@ slots:
   limit_type:
     type: text
     influence_conversation: false
+  first_message:
+    type: text
+    influence_conversation: false
+    initial_value: "0"
+  current_state:
+    type: text
+    influence_conversation: false
+    initial_value: "0"
 responses:
   utter_goodbye:
   - text: Пока

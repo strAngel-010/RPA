@@ -8,6 +8,7 @@ pipeline:
   model_name: "bert"
 - name: SpacyNLP
   model: "card_type"
+  case_sensitive: False
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
   dimensions: ["CARD_TYPE","CARD_CATEGORY","VALUE","CURRENCY","LIMIT_TYPE", "PLACE_TYPE", "SERVICE_TYPE"]
@@ -31,6 +32,9 @@ pipeline:
 - name: EntitySynonymMapper
 - name: DIETClassifier
   epochs: 1
+- name: FallbackClassifier
+  threshold: 0.8
+  ambiguity_threshold: 0.1
 
 policies:
 - name: TEDPolicy
@@ -41,8 +45,8 @@ policies:
   - 64
 - max_history: 6
   name: AugmentedMemoizationPolicy
-- core_threshold: 0.01
+- core_threshold: 0.3
   name: TwoStageFallbackPolicy
-  nlu_threshold: 0.01
+  nlu_threshold: 0.8
 - name: FormPolicy
 - name: MappingPolicy

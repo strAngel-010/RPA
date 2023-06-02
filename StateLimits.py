@@ -9,9 +9,9 @@ class MetaSingleton(type):
             cls._instances[cls] = super(MetaSingleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
-class LimitState(StateMachine, metaclass=MetaSingleton):
+class LimitState(StateMachine):
 
-    base_limit = State("limit_init(0000)", initial=True)
+    base_limit = State("0000", initial=True)
 
     # первая группа состояний
     card_type = State("0010")
@@ -19,62 +19,90 @@ class LimitState(StateMachine, metaclass=MetaSingleton):
     service_type = State("1000")
     limit_type = State("0001")
 
-    #вторая группа состояний из типа карты
-
-    card_place = State("0110")
-    card_service = State("1010")
+    place_card = State("0110")
+    service_card = State("1010")
     card_limit = State("0011")
+    place_limit = State("0101")
+    service_limit = State("1001")
+    service_place = State("1100")
 
-    #вторая группа состояний из типа лимита
-
-    limit_place = State("0101")
-    limit_service = State("1001")
-
-    #вторая группа состояний из типа места
-
-    place_service = State("1100")
-
-    #третья группа состосяний из карты
-
-    card_place_service = State("1110")
-    card_service_limit = State("1011")
-    card_place_limit = State("0111")
-    limit_place_service = State("1101")
+    service_place_card = State("1110")
+    service_card_limit = State("1011")
+    place_card_limit = State("0111")
+    service_place_limit = State("1101")
 
     #выход
 
     full = State("1111")
 
-    finish = State("finish", final=True)
+    finish = State("finish")
 
-    #выходы из базоваго состояния
+    to_service = base_limit.to(service_type)
+    to_place = base_limit.to(place_type)
+    to_card = base_limit.to(card_type)
+    to_limit = base_limit.to(limit_type)
 
-    from_base = base_limit.to(limit_type) | base_limit.to(card_type) | base_limit.to(place_type) | base_limit.to(service_type)
-    from_base2 = base_limit.to(card_limit) | base_limit.to(card_place) | base_limit.to(card_service) | base_limit.to(limit_place) | base_limit.to(limit_service) | base_limit.to(place_service)
-    from_base3 = base_limit.to(card_place_limit) | base_limit.to(card_place_service) | base_limit.to(card_service_limit) | base_limit.to(limit_place_service)
+    to_service_place = service_type.to(service_place) | place_type.to(service_place)
+    to_service_card = service_type.to(service_card) | card_type.to(service_card)
+    to_service_limit = service_type.to(service_limit) | limit_type.to(service_limit)
+    to_place_card = place_type.to(place_card) | card_type.to(place_card)
+    to_place_limit = place_type.to(place_limit) | limit_type.to(place_limit)
+    to_card_limit = card_type.to(card_limit) | limit_type.to(card_limit)
 
-    #выходы из 1 во 2 группу состояний
-
-    from_card = card_type.to(card_limit) | card_type.to(card_place) | card_type.to(card_service)
-    from_limit = limit_type.to(card_limit) | limit_type.to(limit_place) | limit_type.to(limit_service)
-    from_place = place_type.to(card_place) | place_type.to(limit_place) | place_type.to(place_service)
-    from_service = service_type.to(card_service) | place_type.to(limit_service) | place_type.to(place_service)
-
-    #выхоы из 2 в 3 группу состояний
-
-    to_card_place_service = card_place.to(card_place_service) | card_service.to(card_place_service) | place_service.to(card_place_service)
-    to_card_service_limit = limit_service.to(card_service_limit) | card_service.to(card_service_limit) | card_limit.to(card_service_limit)
-    to_card_place_limit = card_limit.to(card_place_limit) | card_place.to(card_place_limit) | limit_place.to(card_place_limit)
-    to_limit_place_service = limit_place.to(limit_place_service) | limit_service.to(limit_place_service) | place_service.to(limit_place_service)
+    to_service_place_card = service_place.to(service_place_card) | service_card.to(service_place_card) | place_card.to(service_place_card)
+    to_service_place_limit = service_place.to(service_place_limit) | service_limit.to(service_place_limit) | place_limit.to(service_place_limit)
+    to_service_card_limit = service_card.to(service_card_limit) | service_limit.to(service_card_limit) | card_limit.to(service_card_limit)
+    to_place_card_limit = place_card.to(place_card_limit) | place_limit.to(place_card_limit) | card_limit.to(place_card_limit)
 
     #выходы в полное состояние
 
-    to_full = card_place_limit.to(full) | card_service_limit.to(full) | card_place_service.to(full) | limit_place_service.to(full)
+    to_full = service_place_card.to(full) | service_place_limit.to(full) | service_card_limit.to(full) | place_card_limit.to(full)
 
     to_finish = full.to(finish, cond="check_all")
+    to_base = full.to(base_limit) | finish.to(base_limit) | base_limit.to(base_limit)
 
     def __init__(self):
         super().__init__()
+        self.reload()
+        self.__utter_first = 1
+
+    '''
+    def __read_json(self):
+        with open("utter_messages.json", "r") as file:
+            utter = json.load(file)
+            self.__uter_faults = utter["utter_messages_faults"]
+            self.__utter_message = utter["utter_messages"]
+            self.__utter_first = utter["utter_first"]
+            self.__utter_next = utter["utter_next"]
+    '''
+
+    def resolve(self, setted_slots=None):
+        if self.__utter_first:
+            self.__utter_first = 0
+            self.edited_slots = 0
+            return False, "Добрый день! Я отвечу на интересующие вас вопросы про лимиты на картах нашего банка. Пожалуйста, скажите, какой картой вы пользуетесь?"
+
+        if setted_slots is not None: self.set_slots(setted_slots)
+        self.check_setted_slot()
+        if self.check_all():
+            self.to_finish
+            limit_res, limit_name, value = self.__search(self.__slots)
+            if limit_res:
+                ans = self.limit + ' через ' + self.service + ' с ' + (self.card.lower())[:-2] + 'ой карты через ' + self.place.lower() +  " составляет " + str(value) + " рублей согласно тарифу "+limit_name+". Расскажите о следующей карте\n"
+                self.reload()
+                self.edited_slots = 0
+                return True, ans
+
+        #print("Setted slots len"+ str(setted_slots))
+        ans = ""
+        self.edited_slots = 1
+        if len(setted_slots) == 0:
+            self.edited_slots = 0
+            ans +=  "Я Вас не понял\n"
+        ans += self.__generate_utter()
+        return False, ans
+
+    def reload(self):
         self.__slots_list = ["card_type", "limit_type", "place_type", "service_type"]
         self.__non_checked_list = ["card_type", "limit_type", "place_type", "service_type"]
         self.__setted_slots = []
@@ -88,57 +116,67 @@ class LimitState(StateMachine, metaclass=MetaSingleton):
         self.limit = None
         self.place = None
         self.service = None
-        self.__utter_message = None
-        self.__utter_faults = None
-        self.__utter_first = None
-        self.__utter_next = None
-        self.__read_json()
-
-    def __read_json(self):
-        with open("utter_messages.json", "r") as file:
-            utter = json.load(file)
-            self.__uter_faults = utter["utter_messages_faults"]
-            self.__utter_message = utter["utter_messages"]
-            self.__utter_first = utter["utter_first"]
-            self.__utter_next = utter["utter_next"]
-
-    def resolve(self, setted_slots=None):
-        if self.current_state.name == "limit_init(0000)" and setted_slots is None:
-            return "Добрый день! Я отвечу на интересующие вас вопросы про лимиты на картых нашего банка. Пожалуйста, скажите мне какой картой вы пользуетесь?"
-
-        self.set_slots(setted_slots)
-        self.check_all()
-        self.check_setted_slot()
+        self.__utter_first = 0
+        self.edited_slots = 0
+        self.to_base()
 
     def set_slots(self, setted_slots):
-        for k, v in setted_slots.items():
+        print(setted_slots)
+        for k, v in setted_slots:
             self.__slots[k] = v
             self.__setted_slots.append(k)
+            print(self.__slots)
 
     def check_setted_slot(self):
         for k, v in self.__slots.items():
             if v is not None:
-                self.__non_checked_list.remove(k)
-            if k == "card":
-                self.card = v
-            elif k == "limit":
-                self.limit = v
-            elif k == "place":
-                self.place = v
-            elif k == "service":
-                self.place = v
+                print("Trying to find", k, "in non checked slots")
+                if (k in self.__non_checked_list):
+                    self.__non_checked_list.remove(k)
+                print("Non checked slots:", self.__non_checked_list)
+                cur_state_name = self.current_state.name
+                filled_inds = [int(i) for i in cur_state_name]
+                print(filled_inds)
+                if k == "service_type":
+                    self.service = v
+                    filled_inds[0] = 1
+                elif k == "place_type":
+                    self.place = v
+                    filled_inds[1] = 1
+                elif k == "card_type":
+                    self.card = v
+                    filled_inds[2] = 1
+                elif k == "limit_type":
+                    self.limit = v
+                    filled_inds[3] = 1
+                print(filled_inds)
+                try: self.send(self.gen_new_state(filled_inds))
+                except Exception: print(self.gen_new_state(filled_inds))
+                print(self.current_state.name)
+
+    def gen_new_state(self, ind):
+        res = "to"
+        for i in range(0, len(ind), 1):
+            if (ind[i] == 1):
+                if (i == 0): res = res+"_service"
+                elif (i == 1): res = res+"_place"
+                elif (i == 2): res = res+"_card"
+                elif (i == 3): res = res+"_limit"
+                else: return None
+        if res == "to_service_place_card_limit": return "to_full"
+        return res
 
     def check_card(self):
-        return self.card is None
+        return self.card
 
     def check_limit(self):
-        return self.limit is None
+        return self.limit
 
     def check_place(self):
-        return self.place is None
+        return self.place
 
     def check_service(self):
-        return self.service is None
+        return self.service
 
     def check_all(self):
         return self.check_card() and self.check_limit() and self.check_place() and self.check_service()
@@ -146,38 +184,24 @@ class LimitState(StateMachine, metaclass=MetaSingleton):
     def __generate_utter(self):
         message = "Пожалуйста, подскажите: "
 
-        if len(self.__setted_slots) == 0:
-            message = "Пожалуйста, подскажите: Вас интересует лимит на перевод или снятие наличных, Вы используете дебетовую или кредитную карту, Вы переводите деньги через СПБ или СБОЛ, Вы получали карту в отделении нашего банка?"
-        elif len(self.__setted_slots) == 3:
-            for i in self.__utter_message:
-                if i not in self.__setted_slots:
-                    message = self.__utter_message[i]
-        elif len(self.__setted_slots) == 2:
-            message += self.__utter_first[self.__non_checked_list[0]]
-            message += " и "
-            message += self.__utter_next[self.__non_checked_list[1]]
-        elif len(self.__setted_slots) == 1:
-            message += self.__utter_first[self.__non_checked_list[0]]
-            for i in self.__non_checked_list[1:]:
-                message += ", "
-                message += self.__utter_next[i]
+        cur_state = self.current_state.name
+        for i in range(0, len(cur_state), 1):
+            if cur_state[i] == "0":
+                if i == 0: message += "\nКаким сервисом вы хотите воспользоваться (СБОЛ/СБП)?"
+                if i == 1: message += "\nГде вы хотите воспользоваться услугами (в банке/в банкомате)?"
+                if i == 2: message += "\nКакая у вас карта (кредитная/дебетовая)?"
+                if i == 3: message += "\nЛимит на какое действие вы хотите узнать (перевод/платеж/снятие)?"
+
         return message
 
     def __search_limit(self, tx, lst_setter, val=True):
         dicti = dict(lst_setter)
-        match_card = 'MATCH (t)-[:CARD]->({name:"' + dicti['card_type'] + '"})'
-        match_limit = 'Match (t)-[:LIMIT]->({name:"' + dicti['limit_type'] + '"})'
-        match_place = 'Match (t)-[:PLACE]->({name:"' + dicti['place_type'] + '"})'
-        match_service = 'Match (t)-[:SERVICE]->({name:"' + dicti['service_type'] + '"})'
+        match_card = 'MATCH (l:Limit {card_type:"' + dicti['card_type'] + '"})\n'
+        match_limit = 'MATCH (l:Limit {limit_type:"' + dicti['limit_type'] + '"})\n'
+        match_place = 'MATCH (l:Limit {place_type:"' + dicti['place_type'] + '"})\n'
+        match_service = 'MATCH (l:Limit {service_type:"' + dicti['service_type'] + '"})\n'
 
-        if val:
-            if dicti['limit_value'] != 0:
-                match_limit_value = f' AND t.value <={dicti["limit_type_value"]} and t.value>0'
-            else:
-                match_limit_value = ' AND t.value = 0'
-        else:
-            match_limit_value = ''
-        search_limit = "Match (t:LIMITVALUE) WHERE EXISTS {" + match_card + "} AND EXISTS {" + match_limit + "} AND EXISTS {" + match_place + "} AND EXISTS  {" + match_service + "} " + match_limit_value + " return t.id, t.name LIMIT 1"
+        search_limit = match_limit + match_service + match_place + match_card + 'return l.limitName, l.value;'
 
         print(search_limit)
         result = tx.run(search_limit, )
@@ -186,6 +210,7 @@ class LimitState(StateMachine, metaclass=MetaSingleton):
 
         return record
 
+    '''
     def __search_card_by_limit(self, tx, limit_id, lst_setter):
         dicti = dict(lst_setter)
         match_limit = "MATCH (c)-[:LIMIT]->(t:Limit {id:" + str(limit_id) + "})"
@@ -198,28 +223,34 @@ class LimitState(StateMachine, metaclass=MetaSingleton):
         result = tx.run(query)
         record = result.single()
         return record
+    '''
 
     def __search(self, lst_setter):
-        self.__driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "neo4j"))
+        print("Search function")
 
-        with self.__driver.session() as session:
-            result = session.write_transaction(
-                self.__search_limit, lst_setter
-            )
-            try:
-                limit_id = result[0]
-                limit_res = True
-            except TypeError:
+        try:
+            self.__driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "neo4j1"))
+
+            with self.__driver.session() as session:
                 result = session.write_transaction(
-                    self.__search_limit, lst_setter, False
+                    self.__search_limit, lst_setter
                 )
-                limit_res = False
-                limit_id = result[0]
-            try:
-                result_type = session.write_transaction(
-                    self.__search_card_by_limit, limit_id, lst_setter
-                )
-                self.__driver.close()
-                return limit_res, result_type[1]
-            except TypeError:
-                return False, None
+                try:
+                    limit_name = result[0]
+                    limit_value = result[1]
+                    return True, limit_name, limit_value
+                except TypeError:
+                    printf("Error")
+                    return False, None, None
+                '''
+                try:
+                    result_type = session.write_transaction(
+                        self.__search_card_by_limit, limit_id, lst_setter
+                    )
+                    self.__driver.close()
+                    return limit_res, result_type[1]
+                except TypeError:
+                    return False, None
+                '''
+        except Exception as e:
+            print(e.args)
